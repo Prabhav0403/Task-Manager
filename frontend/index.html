@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f2ea;
+      --surface: #ffffff;
+      --surface2: #f0ece0;
+      --border: #ddd8c4;
+      --border2: #c8c0a8;
+      --text: #2c2a20;
+      --text2: #5c5740;
+      --text3: #9c9478;
+      --accent: #6b7c3a;
+      --accent-light: #edf0df;
+      --accent-hover: #556130;
+      --khaki: #c8b96e;
+      --khaki-light: #faf5d8;
+      --khaki-border: #ddd0a0;
+      --green: #5a7a3a;
+      --green-bg: #eaf2e0;
+      --yellow: #b8960a;
+      --yellow-bg: #faf5d8;
+      --blue: #4a7080;
+      --blue-bg: #e8f0f4;
+      --red: #a04040;
+      --red-bg: #f8eeee;
+      --pink: #9a6050;
+      --pink-bg: #f8f0ec;
+      --sidebar-bg: #2c2e1e;
+      --sidebar-text: #c8c4a8;
+      --sidebar-muted: #787660;
+      --sidebar-active-bg: #3a3e28;
+      --sidebar-active-text: #d8e0b0;
+      --sidebar-border: #3a3c28;
+      --sidebar-w: 240px;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(44,42,32,0.06), 0 4px 16px rgba(44,42,32,0.05);
+      --shadow-md: 0 4px 20px rgba(44,42,32,0.12);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app { display: flex; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--sidebar-border);
+      display: flex; flex-direction: column;
+      padding: 24px 16px;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 50;
+    }
+    .sidebar-logo {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.25rem;
+      color: var(--sidebar-active-text);
+      padding: 0 8px; margin-bottom: 28px;
+      letter-spacing: 0.2px;
+    }
+    .new-task-btn {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; margin-bottom: 24px;
+      transition: all 0.15s; width: 100%;
+    }
+    .new-task-btn:hover { background: var(--accent-hover); box-shadow: 0 4px 12px rgba(107,124,58,0.4); transform: translateY(-1px); }
+    .new-task-btn .plus { font-size: 1.1rem; line-height: 1; }
+
+    .nav-section { margin-bottom: 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; border-radius: var(--radius-sm);
+      font-size: 0.875rem; font-weight: 500; color: var(--sidebar-text);
+      cursor: pointer; border: none; background: none;
+      width: 100%; text-align: left;
+      transition: all 0.15s; position: relative;
+    }
+    .nav-item:hover { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); }
+    .nav-item.active { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); font-weight: 600; }
+    .nav-item.active::before {
+      content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+      width: 3px; background: var(--khaki); border-radius: 0 2px 2px 0;
+    }
+    .nav-badge {
+      margin-left: auto; background: var(--khaki);
+      color: #2c2a20; font-size: 0.68rem; font-weight: 800;
+      min-width: 18px; height: 18px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center; padding: 0 5px;
+    }
+    .nav-icon { font-size: 0.95rem; width: 18px; text-align: center; flex-shrink: 0; }
+    .sidebar-footer { margin-top: auto; padding-top: 16px; border-top: 1px solid var(--sidebar-border); }
+    .user-chip-sidebar {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 8px; border-radius: var(--radius-sm);
+    }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--khaki));
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.8rem; color: white; flex-shrink: 0;
+    }
+    .avatar-sm { width: 28px; height: 28px; font-size: 0.75rem; }
+    .user-info-name { font-size: 0.8rem; font-weight: 600; color: var(--sidebar-active-text); }
+    .user-info-role { font-size: 0.7rem; color: var(--sidebar-muted); text-transform: capitalize; }
+
+    /* ── MAIN ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 40;
+    }
+    .topbar-title { font-size: 1rem; font-weight: 600; color: var(--text); }
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+    .topbar-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--text2); padding: 6px 14px; border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .topbar-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .topbar-btn.danger { border-color: #e8c8c8; color: var(--red); }
+    .topbar-btn.danger:hover { background: var(--red-bg); }
+
+    /* ── CONTENT ── */
+    .content { padding: 28px 32px; flex: 1; }
+
+    /* ── STATUS TABS ── */
+    .status-tabs {
+      display: flex; align-items: flex-end; gap: 28px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 28px; flex-wrap: wrap;
+    }
+    .status-tab {
+      padding-bottom: 14px; font-size: 0.9rem; font-weight: 500;
+      color: var(--text3); cursor: pointer; border: none; background: none;
+      font-family: 'DM Sans', sans-serif;
+      position: relative; transition: color 0.15s; white-space: nowrap;
+    }
+    .status-tab .tab-count { font-size: 0.72rem; color: var(--text3); margin-left: 4px; }
+    .status-tab.active { color: var(--text); font-weight: 700; font-size: 1rem; }
+    .status-tab.active::after {
+      content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+      height: 2px; background: var(--accent); border-radius: 1px;
+    }
+    .status-tab.active .tab-count { color: var(--text2); }
+
+    /* ── STATS ── */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow);
+    }
+    .stat-value { font-size: 1.8rem; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 0.72rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 0.68rem; font-weight: 700; color: var(--text3);
+      text-transform: uppercase; letter-spacing: 1.5px;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    }
+    .section-label-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--khaki-light); border: 2px solid var(--khaki);
+    }
+
+    /* ── FILTERS ── */
+    .filters-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+    .filter-select {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 7px 12px;
+      font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+      color: var(--text2); cursor: pointer; outline: none; transition: border-color 0.15s;
+    }
+    .filter-select:focus { border-color: var(--accent); }
+
+    /* ── TASK CARD ── */
+    .task-list { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ══ TASK CARD ══════════════════════════════════ */
+    .task-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .task-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      box-shadow: 0 1px 4px rgba(44,42,32,0.04);
+      transition: box-shadow 0.18s, transform 0.18s, border-color 0.18s;
+      min-height: 72px;
+      position: relative;
+      gap: 0;
+    }
+    .task-card:hover {
+      box-shadow: 0 6px 24px rgba(107,124,58,0.15);
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+
+    /* Left priority stripe */
+    .tc-stripe {
+      width: 5px; align-self: stretch; flex-shrink: 0;
+      border-radius: 14px 0 0 14px;
+    }
+    .tc-stripe.high   { background: var(--red); }
+    .tc-stripe.medium { background: var(--khaki); }
+    .tc-stripe.low    { background: var(--blue); }
+
+    /* Icon zone */
+    .tc-icon {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.05rem; flex-shrink: 0; position: relative;
+      margin: 0 14px 0 16px;
+    }
+    .tc-icon-dot {
+      position: absolute; bottom: -3px; right: -3px;
+      width: 9px; height: 9px; border-radius: 50%;
+      border: 2px solid var(--surface);
+    }
+    .p-high   { background: var(--red); }
+    .p-medium { background: var(--khaki); }
+    .p-low    { background: var(--blue); }
+    .p-todo        { background: var(--border2); }
+    .p-in-progress { background: var(--khaki); }
+    .p-done        { background: var(--green); }
+
+    /* Title + desc + tags block */
+    .tc-body { flex: 1; min-width: 0; padding: 14px 16px 14px 0; }
+    .tc-title {
+      font-size: 0.92rem; font-weight: 700;
+      color: var(--text); line-height: 1.3; margin-bottom: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .tc-sub {
+      font-size: 0.765rem; color: var(--text3); line-height: 1.4;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 6px;
+    }
+    .tc-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+    .tc-tag {
+      font-size: 0.63rem; font-weight: 700; padding: 2px 8px;
+      border-radius: 20px; letter-spacing: 0.2px;
+    }
+
+    /* Pills zone */
+    .tc-pills {
+      display: flex; gap: 6px; align-items: center;
+      flex-shrink: 0; padding: 14px 16px;
+      border-left: 1px solid var(--border);
+      background: var(--surface2);
+      min-width: 260px;
+      flex-wrap: wrap;
+    }
+
+    /* Due date badge */
+    .tc-due {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.7rem; font-weight: 600; padding: 3px 9px;
+      border-radius: 20px; border: 1px solid; white-space: nowrap;
+    }
+
+    /* Action buttons */
+    .tc-actions {
+      display: flex; flex-direction: column; gap: 5px;
+      padding: 10px 14px;
+      border-left: 1px solid var(--border);
+      align-self: stretch; justify-content: center;
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .tc-btn {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--surface2);
+      transition: all 0.15s;
+    }
+    .tc-btn.edit:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      transform: scale(1.08);
+    }
+    .tc-btn.del:hover {
+      background: var(--red-bg);
+      border-color: var(--red);
+      transform: scale(1.08);
+    }
+    .tc-btn.done {
+      background: var(--green-bg);
+      border-color: #acd498;
+      color: var(--green);
+    }
+    .tc-btn.done:hover {
+      background: var(--green);
+      border-color: var(--green);
+      color: white;
+      transform: scale(1.08);
+    }
+    /* Overdue card highlight */
+    .task-card.overdue {
+      border-color: #e0a8a8;
+      background: #fff9f9;
+    }
+    .task-card.overdue .tc-stripe { background: var(--red) !important; }
+    /* Done card muted */
+    .task-card.is-done {
+      opacity: 0.72;
+    }
+    .task-card.is-done .tc-title {
+      text-decoration: line-through;
+      color: var(--text3);
+    }
+
+    /* ── STATUS PILL ── */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 11px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+      border: 1.5px solid transparent; letter-spacing: 0.1px;
+    }
+    .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .pill-todo         { background: var(--surface2);   color: var(--text2);  border-color: var(--border2); }
+    .pill-todo .dot    { background: var(--border2); }
+    .pill-in-progress  { background: #faf0d0; color: #7a5c08; border-color: #e0c870; }
+    .pill-in-progress .dot { background: #c8a030; }
+    .pill-done         { background: var(--green-bg); color: var(--green); border-color: #acd498; }
+    .pill-done .dot    { background: var(--green); }
+    .pill-low          { background: var(--blue-bg); color: var(--blue); border-color: #9cc4d0; }
+    .pill-low .dot     { background: var(--blue); }
+    .pill-medium       { background: #faf0d0; color: #7a5c08; border-color: #e0c870; }
+    .pill-medium .dot  { background: #c8a030; }
+    .pill-high         { background: var(--red-bg); color: var(--red); border-color: #d8a8a8; }
+    .pill-high .dot    { background: var(--red); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 9px 16px; border: none; border-radius: var(--radius-sm);
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem; font-weight: 600;
+      transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 4px 14px rgba(107,124,58,0.35); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-ghost { background: var(--surface2); color: var(--text2); border: 1.5px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .btn-danger-soft { background: var(--red-bg); color: var(--red); border: 1.5px solid #e0b8b8; }
+    .btn-danger-soft:hover { background: #f0d0d0; }
+    .btn-sm { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
+    .btn-icon {
+      width: 30px; height: 30px; padding: 0; border-radius: 7px;
+      background: none; border: 1.5px solid var(--border);
+      color: var(--text3); cursor: pointer; font-size: 0.8rem;
+      transition: all 0.15s; display: flex; align-items: center; justify-content: center;
+    }
+    .btn-icon:hover { background: var(--surface2); color: var(--text); border-color: var(--accent); }
+
+    /* ── ALERTS ── */
+    .alert {
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      margin-bottom: 14px; font-size: 0.825rem; font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+      animation: slideIn 0.2s ease;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    .alert-error { background: var(--red-bg); border: 1.5px solid #e0b8b8; color: var(--red); }
+    .alert-success { background: var(--green-bg); border: 1.5px solid #acd498; color: var(--green); }
+
+    /* ── AUTH ── */
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 24px; }
+    .auth-panel {
+      background: var(--surface); border-radius: 20px;
+      border: 1.5px solid var(--border); padding: 44px;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 8px 40px rgba(107,124,58,0.12);
+    }
+    .auth-brand { font-family: 'DM Serif Display', serif; font-size: 2rem; color: var(--accent); text-align: center; margin-bottom: 6px; }
+    .auth-subtitle { text-align: center; color: var(--text3); font-size: 0.85rem; margin-bottom: 32px; }
+    .auth-tabs { display: flex; background: var(--surface2); border-radius: var(--radius-sm); padding: 4px; gap: 4px; margin-bottom: 24px; }
+    .auth-tab {
+      flex: 1; padding: 9px; border: none; background: transparent;
+      color: var(--text3); border-radius: 6px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 600; transition: all 0.15s;
+    }
+    .auth-tab.active { background: var(--surface); color: var(--accent); box-shadow: 0 1px 4px rgba(44,42,32,0.1); }
+
+    /* ── FORMS ── */
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; margin-bottom: 5px; font-size: 0.8rem; color: var(--text2); font-weight: 600; }
+    .form-input {
+      width: 100%; padding: 10px 12px;
+      background: var(--surface2); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--accent); background: white; }
+    select.form-input { cursor: pointer; }
+    textarea.form-input { resize: vertical; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(44,42,32,0.5);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 24px; backdrop-filter: blur(6px);
+      animation: fadeIn 0.15s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: var(--surface); border-radius: 16px; padding: 32px;
+      width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+      border: 1.5px solid var(--border); box-shadow: var(--shadow-md);
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.97) translateY(8px); } to { opacity: 1; transform: none; } }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .modal-title { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    .modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+    /* ── ADMIN TABLE ── */
+    .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1.5px solid var(--border); background: var(--surface); }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { background: var(--surface2); padding: 10px 16px; text-align: left; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); border-bottom: 1.5px solid var(--border); }
+    tbody td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 0.845rem; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: var(--surface2); }
+
+    /* ── ROLE BADGE ── */
+    .role-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+    .role-admin { background: var(--accent-light); color: var(--accent); border: 1px solid #c8d8a0; }
+    .role-user { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); }
+
+    /* ── SPINNER ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; flex-shrink: 0; }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align: center; padding: 64px 24px; color: var(--text3); }
+    .empty-icon { font-size: 2.8rem; margin-bottom: 12px; }
+    .empty h3 { font-size: 1rem; margin-bottom: 6px; color: var(--text2); font-weight: 600; }
+
+    /* ── PAGINATION ── */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; }
+    .page-info { font-size: 0.8rem; color: var(--text3); padding: 0 8px; }
+
+    /* ── DEMO HINT ── */
+    /*.demo-hint { text-align: center; margin-top: 16px; padding: 10px 14px; background: var(--accent-light); border-radius: var(--radius-sm); border: 1px solid #c8d8a0; }
+    .demo-hint p { font-size: 0.78rem; color: var(--text2); }
+    .demo-hint strong { color: var(--accent); }*/
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .tc-pills { min-width: auto; }
+      .tc-assignee { display: none; }
+      .content { padding: 20px 16px; }
+      .status-tabs { gap: 16px; overflow-x: auto; }
+    }
+  
+
+    /* ── TOAST NOTIFICATIONS ── */
+    .toast-container {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 9999; pointer-events: none;
+    }
+    .toast {
+      display: flex; align-items: flex-start; gap: 12px;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+      box-shadow: 0 8px 32px rgba(44,42,32,0.18);
+      min-width: 300px; max-width: 380px;
+      pointer-events: all;
+      animation: toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .toast.removing { animation: toastOut 0.25s ease forwards; }
+    @keyframes toastIn  { from { opacity: 0; transform: translateX(60px) scale(0.95); } to { opacity: 1; transform: none; } }
+    @keyframes toastOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(60px) scale(0.95); } }
+    .toast-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: 1px; }
+    .toast-body { flex: 1; min-width: 0; }
+    .toast-title { font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .toast-msg   { font-size: 0.77rem; color: var(--text2); line-height: 1.4; }
+    .toast-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text3); font-size: 0.9rem; padding: 0 2px;
+      flex-shrink: 0; line-height: 1;
+    }
+    .toast-close:hover { color: var(--text); }
+    .toast.overdue  { border-color: #e0a8a8; background: #fff8f8; }
+    .toast.due-soon { border-color: var(--khaki-border); background: var(--khaki-light); }
+    .toast.info     { border-color: #b8d4dc; background: var(--blue-bg); }
+
+    /* Due date input hint */
+    .due-hint {
+      font-size: 0.73rem; margin-top: 5px; padding: 5px 10px;
+      border-radius: 6px; display: flex; align-items: center; gap: 6px;
+    }
+    .due-hint.error   { background: var(--red-bg);    color: var(--red);    border: 1px solid #e0b8b8; }
+    .due-hint.warning { background: var(--yellow-bg); color: #7a5c08;       border: 1px solid var(--khaki-border); }
+    .due-hint.ok      { background: var(--green-bg);  color: var(--green);  border: 1px solid #acd498; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+const API_BASE = 'http://localhost:5000/api/v1';
+
+// ── SESSION HELPERS ────────────────────────────
+const getActiveSession = () => {
+  try { return JSON.parse(localStorage.getItem('activeUserSession')); } catch { return null; }
+};
+const setActiveSession = (user) => {
+  localStorage.setItem('activeUserSession', JSON.stringify({
+    email: user.email, name: user.name, loginTime: Date.now()
+  }));
+};
+const clearSession = () => localStorage.removeItem('activeUserSession');
+
+const api = async (endpoint, options = {}) => {
+  const token = localStorage.getItem('accessToken');
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...options,
+  });
+
+  let data = {};
+  try { data = await res.json(); } catch {}
+
+  // 401 on auth endpoints (login/register) = wrong credentials → let the
+  // catch block in the caller show the error message, don't reload.
+  const isAuthEndpoint = endpoint.startsWith('/auth/login') || endpoint.startsWith('/auth/register');
+
+  if (res.status === 401 && !isAuthEndpoint) {
+    // Token expired mid-session — wipe everything and reload to login screen
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    clearSession();
+    location.reload();
+    return;
+  }
+
+  if (!data.success) throw { status: res.status, message: data.message || 'Something went wrong. Please try again.', errors: data.errors };
+  return data;
+};
+
+/* ── SMALL COMPONENTS ────────────────────────── */
+
+const Alert = ({ type, message }) =>
+  message ? <div className={`alert alert-${type}`}>{type === 'error' ? '⚠' : '✓'} {message}</div> : null;
+
+const Spinner = () => <span className="spinner" />;
+
+const StatusPill = ({ value }) => {
+  const map = {
+    'todo': ['pill-todo', 'To Do'],
+    'in-progress': ['pill-in-progress', 'In Progress'],
+    'done': ['pill-done', 'Done'],
+    'low': ['pill-low', 'Low'],
+    'medium': ['pill-medium', 'Medium'],
+    'high': ['pill-high', 'High'],
+  };
+  const [cls, label] = map[value] || ['pill-todo', value];
+  return <span className={`status-pill ${cls}`}><span className="dot" />{label}</span>;
+};
+
+const tagColors = ['#6b7c3a,#edf0df', '#5a7a3a,#eaf2e0', '#4a7080,#e8f0f4', '#9a6050,#f8f0ec', '#c8b96e,#faf5d8'];
+const getTagColor = (str) => tagColors[str.charCodeAt(0) % tagColors.length].split(',');
+
+/* ── TOAST SYSTEM ───────────────────────────────── */
+const ToastContext = React.createContext(null);
+
+const ToastProvider = ({ children }) => {
+  const [toasts, setToasts] = React.useState([]);
+
+  const removeToast = React.useCallback((id) => {
+    setToasts(t => t.map(x => x.id === id ? { ...x, removing: true } : x));
+    setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 260);
+  }, []);
+
+  const addToast = React.useCallback(({ title, msg, type = 'info', duration = 6000, taskId, action }) => {
+    const id = Date.now() + Math.random();
+    setToasts(t => [...t, { id, title, msg, type, removing: false, taskId, action }]);
+    setTimeout(() => removeToast(id), duration);
+  }, [removeToast]);
+
+  const handleMarkDoneFromToast = async (toast) => {
+    try {
+      await api(`/tasks/${toast.taskId}`, { method: 'PUT', body: JSON.stringify({ status: 'done' }) });
+      removeToast(toast.id);
+      // Show a brief success toast
+      const successId = Date.now() + Math.random();
+      setToasts(t => [...t, { id: successId, title: 'Marked as done ✓', type: 'info', removing: false }]);
+      setTimeout(() => {
+        setToasts(t => t.map(x => x.id === successId ? { ...x, removing: true } : x));
+        setTimeout(() => setToasts(t => t.filter(x => x.id !== successId)), 260);
+      }, 3000);
+    } catch {}
+  };
+
+  const icons = { overdue: '⚠️', 'due-soon': '🕐', info: '✅' };
+
+  return (
+    <ToastContext.Provider value={addToast}>
+      {children}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast ${t.type} ${t.removing ? 'removing' : ''}`}>
+            <span className="toast-icon">{icons[t.type] || '🔵'}</span>
+            <div className="toast-body">
+              <div className="toast-title">{t.title}</div>
+              {t.msg && <div className="toast-msg">{t.msg}</div>}
+              {/* Mark Done action button inside overdue toasts */}
+              {t.action === 'markDone' && t.taskId && (
+                <button
+                  onClick={() => handleMarkDoneFromToast(t)}
+                  style={{
+                    marginTop: 8, padding: '4px 12px',
+                    background: 'var(--green)', color: 'white',
+                    border: 'none', borderRadius: 6,
+                    fontSize: '0.75rem', fontWeight: 700,
+                    cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
+                  }}>
+                  ✓ Mark as Done
+                </button>
+              )}
+            </div>
+            <button className="toast-close" onClick={() => removeToast(t.id)}>✕</button>
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+};
+
+const useToast = () => React.useContext(ToastContext);
+
+/* ── DUE DATE WATCHER (polls every 60s when user is logged in) ─────────────── */
+const useDueDateWatcher = (user) => {
+  const addToast = useToast();
+  // Track which task IDs we've already notified so we don't spam
+  const notified = React.useRef(new Set());
+
+  React.useEffect(() => {
+    if (!user) return;
+
+    const check = async () => {
+      try {
+        const data = await api('/tasks?limit=50&sortBy=dueDate&order=asc');
+        const tasks = data?.data || [];
+        const now = Date.now();
+
+        tasks.forEach(task => {
+          if (!task.dueDate || task.status === 'done') return;
+          const due    = new Date(task.dueDate).getTime();
+          const diffMs = due - now;
+          const diffMin = diffMs / 60000;
+
+          const overdueKey  = `overdue-${task._id}`;
+          const dueSoonKey  = `due-soon-${task._id}`;
+
+          if (diffMs < 0 && !notified.current.has(overdueKey)) {
+            // Past due
+            notified.current.add(overdueKey);
+            const hoursAgo = Math.abs(Math.round(diffMs / 3600000));
+            addToast({
+              type: 'overdue',
+              title: `Overdue: ${task.title}`,
+              msg: `Was due ${hoursAgo > 0 ? hoursAgo + 'h ago' : 'just now'}. Mark it done or update the date.`,
+              duration: 12000,
+              taskId: task._id,
+              action: 'markDone',
+            });
+          } else if (diffMin > 0 && diffMin <= 60 && !notified.current.has(dueSoonKey)) {
+            // Due within the next hour
+            notified.current.add(dueSoonKey);
+            const minsLeft = Math.round(diffMin);
+            addToast({
+              type: 'due-soon',
+              title: `Due soon: ${task.title}`,
+              msg: `Due in ${minsLeft} minute${minsLeft !== 1 ? 's' : ''}.`,
+              duration: 8000,
+            });
+          }
+        });
+      } catch {}
+    };
+
+    check(); // run immediately on mount / user change
+    const interval = setInterval(check, 60000); // then every 60s
+    return () => clearInterval(interval);
+  }, [user, addToast]);
+};
+
+/* ── AUTH PAGE ───────────────────────────────── */
+const AuthPage = ({ onLogin }) => {
+  const [tab, setTab] = useState('login');
+  // Separate form state per tab — switching tabs never carries over data
+  const [loginForm,    setLoginForm]    = useState({ email: '', password: '' });
+  const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '' });
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState('');
+  const [success, setSuccess] = useState('');
+
+  const form        = tab === 'login' ? loginForm    : registerForm;
+  const handleChange = e => {
+    const updater = tab === 'login' ? setLoginForm : setRegisterForm;
+    updater(f => ({ ...f, [e.target.name]: e.target.value }));
+  };
+
+  const switchTab = (t) => {
+    setTab(t);
+    setError('');
+    setSuccess('');
+    // Do NOT carry over the other tab's form values
+  };
+
+  const handleSubmit = async () => {
+    const existing = getActiveSession();
+    if (existing) {
+      setError(`Already signed in as ${existing.name}. Please sign out first.`);
+      return;
+    }
+
+    // Basic client-side validation
+    if (!form.email.trim() || !form.password.trim()) {
+      setError('Email and password are required.');
+      return;
+    }
+    if (tab === 'register') {
+      if (!registerForm.name.trim()) { setError('Full name is required.'); return; }
+      if (registerForm.password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+      if (!/[A-Z]/.test(registerForm.password)) { setError('Password must contain at least one uppercase letter.'); return; }
+      if (!/[0-9]/.test(registerForm.password)) { setError('Password must contain at least one number.'); return; }
+    }
+
+    setError(''); setSuccess(''); setLoading(true);
+    try {
+      const endpoint = tab === 'login' ? '/auth/login' : '/auth/register';
+      const body     = tab === 'login'
+        ? { email: loginForm.email, password: loginForm.password }
+        : { name: registerForm.name, email: registerForm.email, password: registerForm.password };
+
+      const data = await api(endpoint, { method: 'POST', body: JSON.stringify(body) });
+
+      localStorage.setItem('accessToken',  data.data.accessToken);
+      localStorage.setItem('refreshToken', data.data.refreshToken);
+      setActiveSession(data.data.user);
+      onLogin(data.data.user);
+    } catch (err) {
+      // Show the exact server message — no generic override
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-wrap">
+      <div className="auth-panel">
+        <div className="auth-brand">Task Manager</div>
+        <p className="auth-subtitle">Organize your work, your way.</p>
+        <div className="auth-tabs">
+          <button className={`auth-tab ${tab === 'login'    ? 'active' : ''}`} onClick={() => switchTab('login')}>Sign In</button>
+          <button className={`auth-tab ${tab === 'register' ? 'active' : ''}`} onClick={() => switchTab('register')}>Register</button>
+        </div>
+
+        <Alert type="error"   message={error} />
+        <Alert type="success" message={success} />
+
+        {tab === 'register' && (
+          <div className="form-group">
+            <label className="form-label">Full Name</label>
+            <input className="form-input" name="name" placeholder="John Doe"
+              value={registerForm.name} onChange={handleChange} autoComplete="off" />
+          </div>
+        )}
+        <div className="form-group">
+          <label className="form-label">Email Address</label>
+          <input className="form-input" name="email" type="email" placeholder="you@example.com"
+            value={form.email} onChange={handleChange} autoComplete="off" />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Password</label>
+          <input className="form-input" name="password" type="password"
+            placeholder={tab === 'register' ? 'Min 8 chars, 1 uppercase + 1 number' : '••••••••'}
+            value={form.password} onChange={handleChange}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()} />
+        </div>
+
+        <button className="btn btn-primary"
+          style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+          onClick={handleSubmit} disabled={loading}>
+          {loading ? <><Spinner /> Processing...</> : tab === 'login' ? 'Sign In' : 'Create Account'}
+        </button>
+
+        {tab === 'login' && (
+          <div className="demo-hint">
+            {/* <p>Demo admin: <strong>admin@primetrade.ai</strong> / <strong>Admin1234</strong></p> */}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ── TASK MODAL ──────────────────────────────── */
+const TaskModal = ({ task, onClose, onSave }) => {
+  const [form, setForm] = useState(task || { title: '', description: '', status: 'todo', priority: 'medium', dueDate: '', tags: '' });
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState('');
+  const isEdit = !!task?._id;
+
+  const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+
+  // Live due date validation feedback
+  const dueDateStatus = React.useMemo(() => {
+    if (!form.dueDate) return null;
+    const due    = new Date(form.dueDate);
+    const now    = new Date();
+    if (isNaN(due.getTime())) return { type: 'error', msg: 'Invalid date — please pick a valid date and time.' };
+    const year = due.getFullYear();
+    if (year < 2000 || year > 2099) return { type: 'error', msg: 'Year must be between 2000 and 2099.' };
+    const diffMs  = due - now;
+    const diffMin = diffMs / 60000;
+    if (diffMs < 0)        return { type: 'error',   msg: `⚠ This date is already in the past (${Math.abs(Math.round(diffMs/3600000))}h ago).` };
+    if (diffMin < 30)      return { type: 'warning', msg: `⚡ Due in less than 30 minutes — very tight!` };
+    if (diffMin < 60 * 24) return { type: 'warning', msg: `🕐 Due in ${Math.round(diffMin / 60 * 10) / 10}h — due today.` };
+    const days = Math.round(diffMs / 86400000);
+    return { type: 'ok', msg: `✓ Due in ${days} day${days !== 1 ? 's' : ''} — ${due.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}.` };
+  }, [form.dueDate]);
+
+  // Minimum allowed datetime = now (formatted for input)
+  const minDateTime = new Date(Date.now() + 60000).toISOString().slice(0, 16);
+
+  const handleSave = async () => {
+    if (!form.title.trim()) { setError('Task title is required.'); return; }
+    if (form.dueDate) {
+      const due = new Date(form.dueDate);
+      if (isNaN(due.getTime()))          { setError('Please enter a valid due date and time.'); return; }
+      const yr = due.getFullYear();
+      if (yr < 2000 || yr > 2099)        { setError('Year must be between 2000 and 2099.'); return; }
+      if (due < new Date())              { setError('Due date cannot be in the past.'); return; }
+    }
+    setError(''); setLoading(true);
+    try {
+      const body = {
+        ...form,
+        tags: form.tags ? (typeof form.tags === 'string' ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : form.tags) : []
+      };
+      if (!body.dueDate) delete body.dueDate;
+      const data = isEdit
+        ? await api(`/tasks/${task._id}`, { method: 'PUT', body: JSON.stringify(body) })
+        : await api('/tasks', { method: 'POST', body: JSON.stringify(body) });
+      onSave(data.data.task);
+    } catch (err) {
+      setError(err.message || 'Failed to save task');
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <h2 className="modal-title">{isEdit ? 'Edit Task' : 'New Task'}</h2>
+          <button className="btn-icon" onClick={onClose}>✕</button>
+        </div>
+        <Alert type="error" message={error} />
+        <div className="form-group">
+          <label className="form-label">Title *</label>
+          <input className="form-input" name="title" placeholder="Task title" value={form.title} onChange={handleChange} />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Description</label>
+          <textarea className="form-input" name="description" rows={3} placeholder="Optional description..." value={form.description} onChange={handleChange} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="form-group">
+            <label className="form-label">Status</label>
+            <select className="form-input" name="status" value={form.status} onChange={handleChange}>
+              <option value="todo">To Do</option>
+              <option value="in-progress">In Progress</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Priority</label>
+            <select className="form-input" name="priority" value={form.priority} onChange={handleChange}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+        <div className="form-group">
+          <label className="form-label">
+            Due Date
+            <span style={{ fontWeight: 400, color: 'var(--text3)', marginLeft: 6, fontSize: '0.72rem' }}>
+              (optional — must be a future date &amp; time)
+            </span>
+          </label>
+          <input
+            className="form-input"
+            name="dueDate"
+            type="datetime-local"
+            min={minDateTime}
+            max="2099-12-31T23:59"
+            value={form.dueDate ? form.dueDate.slice(0, 16) : ''}
+            onChange={e => {
+              const val = e.target.value;
+              if (val && val.split('-')[0].length > 4) return;
+              handleChange(e);
+            }}
+            style={dueDateStatus?.type === 'error' ? { borderColor: 'var(--red)' } :
+                   dueDateStatus?.type === 'warning' ? { borderColor: 'var(--khaki)' } :
+                   dueDateStatus?.type === 'ok' ? { borderColor: 'var(--green)' } : {}}
+          />
+          {dueDateStatus && (
+            <div className={`due-hint ${dueDateStatus.type}`}>{dueDateStatus.msg}</div>
+          )}
+        </div>
+        <div className="form-group">
+          <label className="form-label">Tags <span style={{ fontWeight: 400, color: 'var(--text3)', fontSize: '0.72rem' }}>(comma-separated)</span></label>
+          <input className="form-input" name="tags" placeholder="backend, api, urgent" value={Array.isArray(form.tags) ? form.tags.join(', ') : form.tags} onChange={handleChange} />
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={handleSave} disabled={loading}>
+            {loading ? <><Spinner /> Saving...</> : isEdit ? 'Update Task' : 'Create Task'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── TASK CARD ───────────────────────────────── */
+const TaskRow = ({ task, onEdit, onDelete, onMarkDone, index }) => {
+  const icons = ['📄', '🎯', '⚡', '🔧', '📊', '🚀', '💡', '🛠️'];
+  const icon     = icons[index % icons.length];
+  const priority = task.priority || 'low';
+  const isDone   = task.status === 'done';
+
+  const formatDate = (d) => {
+    const date = new Date(d);
+    const now  = new Date();
+    const diff = Math.ceil((date - now) / 86400000);
+    if (diff < 0)  return { text: `Overdue ${Math.abs(diff)}d`, color: 'var(--red)', bg: 'var(--red-bg)', border: '#e0b8b8', overdue: true };
+    if (diff === 0) return { text: 'Due today',      color: 'var(--yellow)', bg: 'var(--yellow-bg)', border: 'var(--khaki-border)' };
+    if (diff <= 3)  return { text: `Due in ${diff}d`, color: 'var(--yellow)', bg: 'var(--yellow-bg)', border: 'var(--khaki-border)' };
+    return { text: date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), color: 'var(--text3)', bg: 'var(--surface2)', border: 'var(--border)' };
+  };
+
+  const dueFmt  = task.dueDate ? formatDate(task.dueDate) : null;
+  const isOverdue = dueFmt?.overdue && !isDone;
+
+  return (
+    <div className={`task-card ${isOverdue ? 'overdue' : ''} ${isDone ? 'is-done' : ''}`}>
+      {/* Left priority stripe */}
+      <div className={`tc-stripe ${priority}`} />
+
+      {/* ① Icon */}
+      <div className="tc-icon">
+        <span>{isDone ? '✅' : icon}</span>
+        <span className={`tc-icon-dot p-${priority}`} />
+      </div>
+
+      {/* ② Title + description + tags */}
+      <div className="tc-body">
+        <div className="tc-title">{task.title}</div>
+        {task.description
+          ? <div className="tc-sub">{task.description}</div>
+          : <div className="tc-sub" style={{ fontStyle: 'italic', opacity: 0.5 }}>No description</div>
+        }
+        {task.tags?.length > 0 && (
+          <div className="tc-tags">
+            {task.tags.slice(0, 4).map(t => {
+              const [fg, bg] = getTagColor(t);
+              return <span key={t} className="tc-tag" style={{ background: bg, color: fg }}>#{t}</span>;
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ③ Pills + due date */}
+      <div className="tc-pills">
+        <StatusPill value={priority} />
+        <StatusPill value={task.status} />
+        {dueFmt && (
+          <span className="tc-due" style={{ color: dueFmt.color, background: dueFmt.bg, borderColor: dueFmt.border }}>
+            {isOverdue ? '⚠️' : '📅'} {dueFmt.text}
+          </span>
+        )}
+      </div>
+
+      {/* ④ Actions — mark done + edit + delete */}
+      <div className="tc-actions">
+        {/* Mark Done — shown when not yet done */}
+        {!isDone && (
+          <button
+            className="tc-btn done"
+            title="Mark as done"
+            onClick={() => onMarkDone(task)}
+          >✓</button>
+        )}
+        {/* Undo done — reopen task */}
+        {isDone && (
+          <button
+            className="tc-btn"
+            title="Reopen task"
+            style={{ fontSize: '0.75rem', color: 'var(--text3)' }}
+            onClick={() => onMarkDone(task, 'todo')}
+          >↩</button>
+        )}
+        <button className="tc-btn edit" title="Edit task"   onClick={() => onEdit(task)}>✏️</button>
+        <button className="tc-btn del"  title="Delete task" onClick={() => onDelete(task)}>🗑️</button>
+      </div>
+    </div>
+  );
+};
+
+/* ── HOME PAGE ───────────────────────────────── */
+const HomePage = ({ onNavigate, user }) => {
+  const [stats, setStats] = useState(null);
+  const [recentTasks, setRecentTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [statsData, tasksData] = await Promise.all([
+          api('/tasks/stats'),
+          api('/tasks?limit=5&sortBy=createdAt&order=desc'),
+        ]);
+        setStats(statsData.data.stats);
+        setRecentTasks(tasksData.data);
+      } catch {}
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  if (loading) return <div style={{ textAlign: 'center', padding: '80px 0' }}><Spinner /></div>;
+
+  const statCards = [
+    { label: 'Total Tasks', value: stats?.total || 0, color: 'var(--accent)', bg: 'var(--accent-light)', icon: '📋', nav: 'all' },
+    { label: 'To Do', value: stats?.byStatus?.todo || 0, color: 'var(--text2)', bg: 'var(--surface2)', icon: '⏳', nav: 'todo' },
+    { label: 'In Progress', value: stats?.byStatus?.['in-progress'] || 0, color: 'var(--yellow)', bg: 'var(--yellow-bg)', icon: '⚡', nav: 'in-progress' },
+    { label: 'Completed', value: stats?.byStatus?.done || 0, color: 'var(--green)', bg: 'var(--green-bg)', icon: '✅', nav: 'done' },
+  ];
+
+  return (
+    <div>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: 4 }}>Welcome back 👋</h2>
+        <p style={{ color: 'var(--text3)', fontSize: '0.875rem' }}>
+          {user?.role === 'admin' ? 'You have full admin access to manage users and platform data.' : "Here's what's on your plate today."}
+        </p>
+      </div>
+
+      {/* Admin-only: quick-access banner */}
+      {user?.role === 'admin' && (
+        <div style={{
+          background: 'var(--accent-light)', border: '1.5px solid #c8d8a0',
+          borderRadius: 12, padding: '14px 18px', marginBottom: 24,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: '1.4rem' }}>🛡</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--accent)' }}>Admin Access</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text2)', marginTop: 2 }}>
+                You can manage users, change roles, activate/deactivate accounts, and view platform-wide stats.
+              </div>
+            </div>
+          </div>
+          <button className="btn btn-primary btn-sm" onClick={() => onNavigate('admin')}>
+            Open Admin Panel →
+          </button>
+        </div>
+      )}
+
+      <div className="stats-row" style={{ marginBottom: 32 }}>
+        {statCards.map(s => (
+          <div key={s.label} className="stat-card" style={{ cursor: 'pointer', borderLeft: `4px solid ${s.color}` }}
+            onClick={() => onNavigate('tasks', s.nav)}
+            style={{ cursor: 'pointer', borderLeft: '3px solid', borderLeftColor: s.color }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', border: '1px solid var(--border)' }}>{s.icon}</div>
+              <span style={{ fontSize: '0.68rem', color: 'var(--accent)', fontWeight: 700, background: 'var(--accent-light)', padding: '2px 8px', borderRadius: 20, border: '1px solid #c8d8a0' }}>View →</span>
+            </div>
+            <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+            <div className="stat-label">{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div className="section-label" style={{ marginBottom: 0 }}><span className="section-label-dot" />RECENT TASKS</div>
+        <button className="btn btn-ghost btn-sm" onClick={() => onNavigate('tasks', 'all')}>View all →</button>
+      </div>
+
+      {recentTasks.length === 0 ? (
+        <div className="empty" style={{ padding: '40px 24px' }}>
+          <div className="empty-icon">📭</div>
+          <h3>No tasks yet</h3>
+          <p>Create your first task to get started</p>
+        </div>
+      ) : (
+        <div className="task-list">
+          {recentTasks.map((task, i) => (
+            <TaskRow key={task._id} task={task} index={i}
+              onEdit={() => {}} onDelete={() => {}} showOwner={false}
+              onMarkDone={async (task, status = 'done') => {
+                try {
+                  await api(`/tasks/${task._id}`, { method: 'PUT', body: JSON.stringify({ status }) });
+                  const d = await api('/tasks?limit=5&sortBy=createdAt&order=desc');
+                  setRecentTasks(d.data);
+                } catch {}
+              }} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── TASK CATALOG ─────────────────────────────── */
+const TaskCatalog = ({ showNewModal, onModalClose }) => {
+  const [groups, setGroups] = useState({ todo: [], 'in-progress': [], done: [] });
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(null);
+  const [alert, setAlert] = useState({ type: '', msg: '' });
+
+  const showAlert = (type, msg) => { setAlert({ type, msg }); setTimeout(() => setAlert({ type: '', msg: '' }), 3500); };
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [todo, inprog, done] = await Promise.all([
+        api('/tasks?status=todo&limit=50'),
+        api('/tasks?status=in-progress&limit=50'),
+        api('/tasks?status=done&limit=50'),
+      ]);
+      setGroups({ todo: todo.data, 'in-progress': inprog.data, done: done.data });
+    } catch (err) { showAlert('error', err.message); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+  // Open modal when sidebar New Task button is clicked
+  useEffect(() => { if (showNewModal) { setModal('new'); onModalClose && onModalClose(); } }, [showNewModal]);
+
+  const handleSave = (task) => { setModal(null); fetchAll(); showAlert('success', `Task "${task.title}" saved!`); };
+  const handleDelete = async (task) => {
+    if (!confirm(`Delete "${task.title}"?`)) return;
+    try { await api(`/tasks/${task._id}`, { method: 'DELETE' }); fetchAll(); showAlert('success', 'Deleted'); }
+    catch (err) { showAlert('error', err.message); }
+  };
+
+  const groupMeta = [
+    { key: 'todo', label: 'To Do', color: '#94a3b8', dot: '#94a3b8' },
+    { key: 'in-progress', label: 'In Progress', color: '#b45309', dot: '#f59e0b' },
+    { key: 'done', label: 'Completed', color: '#065f46', dot: '#00b894' },
+  ];
+
+  return (
+    <div>
+      {alert.msg && <Alert type={alert.type} message={alert.msg} />}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '80px 0' }}><Spinner /></div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+          {groupMeta.map(g => (
+            <div key={g.key}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: g.dot, display: 'inline-block' }} />
+                <span style={{ fontWeight: 700, fontSize: '0.8rem', color: g.color, textTransform: 'uppercase', letterSpacing: '0.8px' }}>{g.label}</span>
+                <span style={{ marginLeft: 'auto', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 20, fontSize: '0.72rem', fontWeight: 700, padding: '1px 8px', color: 'var(--text3)' }}>{groups[g.key].length}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {groups[g.key].length === 0 ? (
+                  <div style={{ background: 'var(--surface)', border: '1px dashed var(--border2)', borderRadius: 10, padding: '20px', textAlign: 'center', color: 'var(--text3)', fontSize: '0.8rem' }}>
+                    No tasks
+                  </div>
+                ) : groups[g.key].map(task => (
+                  <div key={task._id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '14px 16px', boxShadow: 'var(--shadow)', transition: 'box-shadow 0.15s' }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--shadow-md)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.style.borderColor = 'var(--border)'; }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem', lineHeight: 1.3 }}>{task.title}</div>
+                      <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                        <button className="btn-icon" onClick={() => setModal({ ...task, tags: task.tags?.join(', ') })}>✏️</button>
+                        <button className="btn-icon" onClick={() => handleDelete(task)}>🗑</button>
+                      </div>
+                    </div>
+                    {task.description && <div style={{ color: 'var(--text3)', fontSize: '0.78rem', marginBottom: 8, lineHeight: 1.4 }}>{task.description}</div>}
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <StatusPill value={task.priority} />
+                      {task.dueDate && <span style={{ fontSize: '0.72rem', color: 'var(--text3)' }}>📅 {new Date(task.dueDate).toLocaleDateString()}</span>}
+                      {task.tags?.slice(0, 2).map(t => {
+                        const [fg, bg] = getTagColor(t);
+                        return <span key={t} style={{ fontSize: '0.68rem', fontWeight: 600, padding: '1px 7px', borderRadius: 20, background: bg, color: fg }}>{t}</span>;
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {modal && <TaskModal task={modal === 'new' ? null : modal} onClose={() => setModal(null)} onSave={handleSave} />}
+    </div>
+  );
+};
+
+/* ── TASK DASHBOARD ──────────────────────────── */
+const TaskDashboard = ({ activeStatusTab, showNewModal, onModalClose, showOwner }) => {
+  const [tasks, setTasks] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [modal, setModal] = useState(null);
+  const [filters, setFilters] = useState({ priority: '', sortBy: 'createdAt', order: 'desc' });
+  const [alert, setAlert] = useState({ type: '', msg: '' });
+  const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState({});
+
+  const showAlert = (type, msg) => { setAlert({ type, msg }); setTimeout(() => setAlert({ type: '', msg: '' }), 3500); };
+
+  // When parent signals to open new task modal
+  useEffect(() => {
+    if (showNewModal) { setModal('new'); onModalClose && onModalClose(); }
+  }, [showNewModal]);
+
+  const fetchTasks = useCallback(async () => {
+    setLoading(true);
+    try {
+      const f = { ...filters };
+      // archived tab → fetch archived tasks; all others → active only
+      if (activeStatusTab === 'archived') {
+        // No status filter; backend returns archived=true when we add the param
+        // We re-use the existing endpoint but filter client-side via a query trick:
+        // The backend soft-deletes via isArchived. To show them we'd need an admin
+        // endpoint; for now show a dedicated message.
+      } else if (activeStatusTab !== 'all') {
+        f.status = activeStatusTab;
+      }
+      const params = new URLSearchParams({
+        page, limit: 8,
+        ...Object.fromEntries(Object.entries(f).filter(([, v]) => v))
+      }).toString();
+      const data = await api(`/tasks?${params}`);
+      setTasks(data.data);
+      setMeta(data.meta);
+    } catch (err) {
+      showAlert('error', err.message);
+    } finally { setLoading(false); }
+  }, [page, filters, activeStatusTab]);
+
+  const fetchStats = useCallback(async () => {
+    try { const data = await api('/tasks/stats'); setStats(data.data.stats); } catch {}
+  }, []);
+
+  useEffect(() => { fetchTasks(); fetchStats(); }, [fetchTasks, fetchStats]);
+  useEffect(() => { setPage(1); }, [activeStatusTab]);
+
+  const handleSave = (task) => {
+    setModal(null); fetchTasks(); fetchStats();
+    showAlert('success', `Task "${task.title}" ${task._id ? 'updated' : 'created'}!`);
+  };
+
+  const handleDelete = async (task) => {
+    if (!confirm(`Delete "${task.title}"?`)) return;
+    try {
+      await api(`/tasks/${task._id}`, { method: 'DELETE' });
+      fetchTasks(); fetchStats();
+      showAlert('success', 'Task deleted');
+    } catch (err) { showAlert('error', err.message); }
+  };
+
+  const handleMarkDone = async (task, targetStatus = 'done') => {
+    try {
+      await api(`/tasks/${task._id}`, { method: 'PUT', body: JSON.stringify({ status: targetStatus }) });
+      fetchTasks(); fetchStats();
+      showAlert('success', targetStatus === 'done'
+        ? `✓ "${task.title}" marked as done!`
+        : `↩ "${task.title}" reopened`);
+    } catch (err) { showAlert('error', err.message); }
+  };
+
+  // Archived/Closed tabs show info state
+  if (activeStatusTab === 'archived' || activeStatusTab === 'closed') {
+    return (
+      <div>
+        {stats && (
+          <div className="stats-row">
+            {[
+              { label: 'Total', value: stats.total, color: '#6c5ce7' },
+              { label: 'To Do', value: stats.byStatus?.todo || 0, color: '#94a3b8' },
+              { label: 'In Progress', value: stats.byStatus?.['in-progress'] || 0, color: '#f59e0b' },
+              { label: 'Done', value: stats.byStatus?.done || 0, color: '#00b894' },
+            ].map(s => (
+              <div className="stat-card" key={s.label}>
+                <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+                <div className="stat-label">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="empty">
+          <div className="empty-icon">{activeStatusTab === 'archived' ? '🗃️' : '🔒'}</div>
+          <h3>{activeStatusTab === 'archived' ? 'Archived Tasks' : 'Closed Tasks'}</h3>
+          <p style={{ marginTop: 6 }}>{activeStatusTab === 'archived'
+            ? 'Deleted tasks are archived here. They are soft-deleted and kept in the database with isArchived=true.'
+            : 'Closed tasks that are fully resolved and locked from editing.'}</p>
+          <p style={{ marginTop: 8, fontSize: '0.78rem', color: 'var(--text3)' }}>
+            {activeStatusTab === 'archived'
+              ? `${(stats?.total || 0)} active tasks. Archived count managed by backend.`
+              : 'No closed tasks at this time.'}
+          </p>
+        </div>
+        {modal && <TaskModal task={null} onClose={() => setModal(null)} onSave={handleSave} />}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Stats */}
+      {stats && (
+        <div className="stats-row">
+          {[
+            { label: 'Total', value: stats.total, color: '#6c5ce7' },
+            { label: 'To Do', value: stats.byStatus?.todo || 0, color: '#94a3b8' },
+            { label: 'In Progress', value: stats.byStatus?.['in-progress'] || 0, color: '#f59e0b' },
+            { label: 'Done', value: stats.byStatus?.done || 0, color: '#00b894' },
+          ].map(s => (
+            <div className="stat-card" key={s.label}>
+              <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+              <div className="stat-label" style={{ color: 'var(--text3)' }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {alert.msg && <Alert type={alert.type} message={alert.msg} />}
+
+      {/* Filters */}
+      <div className="filters-row">
+        <div className="section-label" style={{ marginBottom: 0, marginRight: 4 }}>
+          <span className="section-label-dot" />
+          {activeStatusTab === 'all' ? 'ALL TASKS' : activeStatusTab.replace('-', ' ').toUpperCase()}
+        </div>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <select className="filter-select" value={filters.priority}
+            onChange={e => { setFilters(f => ({ ...f, priority: e.target.value })); setPage(1); }}>
+            <option value="">All Priority</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <select className="filter-select" value={filters.sortBy}
+            onChange={e => { setFilters(f => ({ ...f, sortBy: e.target.value })); setPage(1); }}>
+            <option value="createdAt">Date Created</option>
+            <option value="priority">Priority</option>
+            <option value="dueDate">Due Date</option>
+            <option value="title">Title</option>
+          </select>
+          <select className="filter-select" value={filters.order}
+            onChange={e => { setFilters(f => ({ ...f, order: e.target.value })); setPage(1); }}>
+            <option value="desc">Newest First</option>
+            <option value="asc">Oldest First</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Task list */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '60px 0' }}><Spinner /></div>
+      ) : tasks.length === 0 ? (
+        <div className="empty">
+          <div className="empty-icon">📋</div>
+          <h3>No tasks here</h3>
+          <p>Create a new task to get started</p>
+        </div>
+      ) : (
+        <div className="task-list">
+          {tasks.map((task, i) => (
+            <TaskRow key={task._id} task={task} index={i}
+              onEdit={t => setModal({ ...t, tags: t.tags?.join(', ') })}
+              onDelete={handleDelete}
+              onMarkDone={handleMarkDone}
+              showOwner={showOwner} />
+          ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {meta.totalPages > 1 && (
+        <div className="pagination">
+          <button className="btn btn-ghost btn-sm" disabled={!meta.hasPrevPage} onClick={() => setPage(p => p - 1)}>← Prev</button>
+          <span className="page-info">Page {meta.page} of {meta.totalPages}</span>
+          <button className="btn btn-ghost btn-sm" disabled={!meta.hasNextPage} onClick={() => setPage(p => p + 1)}>Next →</button>
+        </div>
+      )}
+
+      {modal && <TaskModal task={modal === 'new' ? null : modal} onClose={() => setModal(null)} onSave={handleSave} />}
+    </div>
+  );
+};
+
+/* ── ADMIN PANEL ─────────────────────────────── */
+const AdminPanel = () => {
+  const [users, setUsers] = useState([]);
+  const [platformStats, setPlatformStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState({ type: '', msg: '' });
+
+  const showAlert = (type, msg) => { setAlert({ type, msg }); setTimeout(() => setAlert({ type: '', msg: '' }), 3500); };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [usersData, statsData] = await Promise.all([api('/admin/users?limit=50'), api('/admin/stats')]);
+        setUsers(usersData.data);
+        setPlatformStats(statsData.data);
+      } catch (err) { showAlert('error', err.message); }
+      finally { setLoading(false); }
+    })();
+  }, []);
+
+  const toggleStatus = async (user) => {
+    try {
+      const data = await api(`/admin/users/${user._id}`, { method: 'PATCH', body: JSON.stringify({ isActive: !user.isActive }) });
+      setUsers(us => us.map(u => u._id === user._id ? data.data.user : u));
+      showAlert('success', `User ${data.data.user.isActive ? 'activated' : 'deactivated'}`);
+    } catch (err) { showAlert('error', err.message); }
+  };
+
+  const promoteToAdmin = async (user) => {
+    if (!confirm(`Promote ${user.name} to admin?`)) return;
+    try {
+      const data = await api(`/admin/users/${user._id}`, { method: 'PATCH', body: JSON.stringify({ role: 'admin' }) });
+      setUsers(us => us.map(u => u._id === user._id ? data.data.user : u));
+      showAlert('success', `${user.name} is now an admin`);
+    } catch (err) { showAlert('error', err.message); }
+  };
+
+  const deleteUser = async (user) => {
+    if (!confirm(`Delete ${user.name} and ALL their tasks?`)) return;
+    try {
+      await api(`/admin/users/${user._id}`, { method: 'DELETE' });
+      setUsers(us => us.filter(u => u._id !== user._id));
+      showAlert('success', 'User deleted');
+    } catch (err) { showAlert('error', err.message); }
+  };
+
+  return (
+    <div>
+      {alert.msg && <Alert type={alert.type} message={alert.msg} />}
+      {platformStats && (
+        <div className="stats-row" style={{ marginBottom: 28 }}>
+          {[
+            { label: 'Total Users', value: platformStats.users?.total || 0, color: '#6c5ce7' },
+            { label: 'Active', value: platformStats.users?.active || 0, color: '#00b894' },
+            { label: 'Admins', value: platformStats.users?.admins || 0, color: '#f59e0b' },
+            { label: 'Total Tasks', value: platformStats.tasks?.total || 0, color: '#3b82f6' },
+          ].map(s => (
+            <div className="stat-card" key={s.label}>
+              <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+              <div className="stat-label">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="section-label" style={{ marginBottom: 12 }}>
+        <span className="section-label-dot" /> ALL USERS
+      </div>
+      <div className="table-wrap">
+        {loading ? <div style={{ textAlign: 'center', padding: 48 }}><Spinner /></div> : (
+          <table>
+            <thead>
+              <tr><th>User</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {users.map(user => (
+                <tr key={user._id}>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div className="avatar" style={{ width: 34, height: 34, fontSize: '0.8rem' }}>{user.name?.[0]?.toUpperCase()}</div>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{user.name}</div>
+                        <div style={{ color: 'var(--text3)', fontSize: '0.75rem' }}>{user.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><span className={`role-pill role-${user.role}`}>{user.role === 'admin' ? '🛡 Admin' : 'User'}</span></td>
+                  <td>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: user.isActive ? '#065f46' : '#b91c1c' }}>
+                      {user.isActive ? '● Active' : '● Inactive'}
+                    </span>
+                  </td>
+                  <td style={{ color: 'var(--text3)', fontSize: '0.78rem' }}>{new Date(user.createdAt).toLocaleDateString()}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => toggleStatus(user)}>
+                        {user.isActive ? 'Deactivate' : 'Activate'}
+                      </button>
+                      {user.role !== 'admin' && (
+                        <button className="btn btn-ghost btn-sm" onClick={() => promoteToAdmin(user)}>↑ Admin</button>
+                      )}
+                      <button className="btn btn-danger-soft btn-sm" onClick={() => deleteUser(user)}>Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ── MAIN APP ─────────────────────────────────── */
+// navPage: 'home' | 'tasks' | 'catalog' | 'admin'
+// statusTab: 'all' | 'todo' | 'in-progress' | 'done' | 'archived' | 'closed'
+
+const STATUS_TABS = [
+  { key: 'all', label: 'Active Tasks' },
+  { key: 'done', label: 'Completed' },
+  { key: 'in-progress', label: 'In Progress' },
+  { key: 'todo', label: 'To Do' },
+];
+
+const PAGE_TITLES = { home: 'Home', tasks: 'My Tasks', catalog: 'Task Catalog', admin: 'Admin Panel' };
+
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [navPage, setNavPage] = useState('home');
+  const [statusTab, setStatusTab] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [taskCounts, setTaskCounts] = useState({});
+  // Lifted modal state — true triggers TaskDashboard / TaskCatalog to open new modal
+  const [triggerNewTask, setTriggerNewTask] = useState(false);
+  const [catalogTriggerNewTask, setCatalogTriggerNewTask] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    const session = getActiveSession();
+    // If no token OR no matching session record → clear everything and show login
+    if (!token || !session) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      clearSession();
+      setLoading(false);
+      return;
+    }
+    api('/auth/me')
+      .then(data => setUser(data.data.user))
+      .catch(() => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        clearSession();
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const refreshCounts = useCallback(() => {
+    if (user) api('/tasks/stats').then(d => setTaskCounts(d.data.stats.byStatus || {})).catch(() => {});
+  }, [user]);
+
+  useEffect(() => { refreshCounts(); }, [refreshCounts]);
+
+  // Fire due-date toast notifications
+  useDueDateWatcher(user);
+
+  const handleLogout = async () => {
+    try { await api('/auth/logout', { method: 'POST' }); } catch {}
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    clearSession();
+    setUser(null);
+  };
+
+  const handleNewTask = () => {
+    // Route to tasks page and open modal
+    if (navPage === 'catalog') {
+      setCatalogTriggerNewTask(true);
+    } else {
+      setNavPage('tasks');
+      setStatusTab('all');
+      setTriggerNewTask(true);
+    }
+  };
+
+  const handleNavigate = (page, tab) => {
+    setNavPage(page);
+    if (tab) setStatusTab(tab);
+  };
+
+  if (loading) return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: 'var(--bg)', flexDirection: 'column', gap: 12 }}>
+      <Spinner />
+    </div>
+  );
+  if (!user) return <AuthPage onLogin={u => { setUser(u); }} />;
+
+  const tabCount = (key) => {
+    if (key === 'all') return Object.values(taskCounts).reduce((a, b) => a + b, 0);
+    return taskCounts[key] || 0;
+  };
+
+  return (
+    <div className="app">
+      {/* ── SIDEBAR ── */}
+      <aside className="sidebar">
+        <div className="sidebar-logo">⚡ Task Manager</div>
+
+        {/* New Task button — always works, lifted state */}
+        <button className="new-task-btn" onClick={handleNewTask}>
+          <span className="plus">+</span> New Task
+        </button>
+
+        {/* ── Common nav (all roles) ── */}
+        <div className="nav-section">
+          <button
+            className={`nav-item ${navPage === 'home' ? 'active' : ''}`}
+            onClick={() => setNavPage('home')}>
+            <span className="nav-icon">🏠</span> Home
+          </button>
+          <button
+            className={`nav-item ${navPage === 'catalog' ? 'active' : ''}`}
+            onClick={() => setNavPage('catalog')}>
+            <span className="nav-icon">📂</span> Task Catalog
+          </button>
+        </div>
+
+        {/* ── Admin-only section ── */}
+        {user.role === 'admin' && (
+          <div className="nav-section" style={{ marginTop: 8 }}>
+            <div style={{
+              fontSize: '0.6rem', fontWeight: 700, color: 'var(--sidebar-muted)',
+              textTransform: 'uppercase', letterSpacing: '1.2px',
+              padding: '0 8px', marginBottom: 6,
+            }}>Admin</div>
+            <button
+              className={`nav-item ${navPage === 'admin' ? 'active' : ''}`}
+              onClick={() => setNavPage('admin')}>
+              <span className="nav-icon">🛡</span> User Management
+            </button>
+          </div>
+        )}
+
+        <div className="sidebar-footer">
+          <div className="user-chip-sidebar">
+            <div className="avatar">{user.name?.[0]?.toUpperCase()}</div>
+            <div>
+              <div className="user-info-name">{user.name}</div>
+              <div className="user-info-role">{user.role}</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── MAIN AREA ── */}
+      <div className="main">
+        {/* Topbar */}
+        <header className="topbar">
+          <div className="topbar-title">{PAGE_TITLES[navPage] || 'Task Manager'}</div>
+          <div className="topbar-right">
+            {/* Role badge — always visible */}
+            <span style={{
+              fontSize: '0.7rem', fontWeight: 700, padding: '3px 10px',
+              borderRadius: 20, letterSpacing: '0.3px',
+              background: user.role === 'admin' ? 'var(--accent-light)' : 'var(--surface2)',
+              color: user.role === 'admin' ? 'var(--accent)' : 'var(--text3)',
+              border: user.role === 'admin' ? '1px solid #c8d8a0' : '1px solid var(--border)',
+            }}>
+              {user.role === 'admin' ? '🛡 Admin' : '👤 User'}
+            </span>
+
+            {/* Admin-only: quick jump to admin panel */}
+            {user.role === 'admin' && navPage !== 'admin' && (
+              <button className="topbar-btn" onClick={() => setNavPage('admin')}>Admin Panel</button>
+            )}
+            {navPage === 'admin' && (
+              <button className="topbar-btn" onClick={() => setNavPage('home')}>← Back</button>
+            )}
+            <button className="topbar-btn danger" onClick={handleLogout}>Sign Out</button>
+          </div>
+        </header>
+
+        {/* Content */}
+        <div className="content">
+
+          {/* HOME */}
+          {navPage === 'home' && (
+            <HomePage onNavigate={handleNavigate} user={user} />
+          )}
+
+          {/* MY TASKS */}
+          {navPage === 'tasks' && (
+            <>
+              {/* Status tabs */}
+              <div className="status-tabs">
+                {STATUS_TABS.map(tab => (
+                  <button key={tab.key}
+                    className={`status-tab ${statusTab === tab.key ? 'active' : ''}`}
+                    onClick={() => setStatusTab(tab.key)}>
+                    {tab.label}
+                    <span className="tab-count">({tabCount(tab.key)})</span>
+                  </button>
+                ))}
+                {/* Archived & Closed — now wired */}
+                <button
+                  className={`status-tab ${statusTab === 'archived' ? 'active' : ''}`}
+                  style={{ marginLeft: 'auto' }}
+                  onClick={() => setStatusTab('archived')}>
+                  Archived
+                </button>
+                <button
+                  className={`status-tab ${statusTab === 'closed' ? 'active' : ''}`}
+                  onClick={() => setStatusTab('closed')}>
+                  Closed (0)
+                </button>
+              </div>
+
+              <TaskDashboard
+                activeStatusTab={statusTab}
+                showNewModal={triggerNewTask}
+                onModalClose={() => setTriggerNewTask(false)}
+                showOwner={user.role === 'admin'}
+              />
+            </>
+          )}
+
+          {/* TASK CATALOG */}
+          {navPage === 'catalog' && (
+            <TaskCatalog
+              showNewModal={catalogTriggerNewTask}
+              onModalClose={() => setCatalogTriggerNewTask(false)}
+            />
+          )}
+
+          {/* ADMIN */}
+          {navPage === 'admin' && <AdminPanel />}
+
+        </div>
+      </div>
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <ToastProvider>
+    <App />
+  </ToastProvider>
+);
+</script>
+</body>
+</html>

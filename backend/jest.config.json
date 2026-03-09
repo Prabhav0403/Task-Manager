@@ -1,0 +1,11 @@
+{
+  "testEnvironment": "node",
+  "testTimeout": 30000,
+  "collectCoverageFrom": [
+    "src/**/*.js",
+    "!src/server.js",
+    "!src/config/swagger.js"
+  ],
+  "coverageReporters": ["text", "lcov"],
+  "testPathIgnorePatterns": ["/node_modules/"]
+}
