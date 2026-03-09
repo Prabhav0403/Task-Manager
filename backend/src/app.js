@@ -27,7 +27,9 @@ app.use(helmet());
 const allowedOrigins = [
   "http://localhost:3000",
   "http://127.0.0.1:5500",
-  "http://localhost:5500"
+  "http://localhost:5500",
+  "https://task-manager-r759.onrender.com",
+  "https://*.vercel.app"
 ];
 
 app.use(cors({
