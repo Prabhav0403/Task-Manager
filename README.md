@@ -1,4 +1,4 @@
-# ⚡ PrimeTrade – Scalable REST API with Auth & RBAC
+# Task Manager – Scalable REST API with Auth & RBAC
 
 A production-ready backend API built with **Node.js + Express + MongoDB**, featuring JWT authentication, role-based access control, full CRUD for tasks, Swagger documentation, and a React frontend.
 
